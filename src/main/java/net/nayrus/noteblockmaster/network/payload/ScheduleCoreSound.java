@@ -32,13 +32,15 @@ public record ScheduleCoreSound(BlockPos pos, float volume, int data) implements
             float volume,
             AdvancedInstrument instrument,  // 5 Bit
             boolean noDecay,                // 1 Bit
-            int delay                       // 5 Bit
+            int delay,                       // 5 Bit
+            boolean heldByRedstone           // 1 Bit
     ){
         int data = (sustainIndex & 0xFF)
                 | ((noteVal & 0xFF) << 8)
                 | ((instrument.ordinal() & 0x1F) << 16)
                 | ((noDecay ? 1 : 0) << 24)
-                | ((delay & 0x1F) << 25);
+                | ((delay & 0x1F) << 25)
+                | ((heldByRedstone ? 1 : 0) << 30);
         return new ScheduleCoreSound(pos, volume, data);
     }
 }
