@@ -107,9 +107,10 @@ public class PacketHandler {
         int instrumentOrdinal = (data >> 16) & 0xFF;    // Extract 8 bits (16-23)
         boolean noDecay = ((data >> 24) & 1) == 1;      // Extract 1 bit (24)
         int delay = (data >> 25) & 0x1F;                // Extract 5 bits (25-29)
+        boolean heldByRedstone = ((data >> 30) & 1) == 1; // Extract bit 30
 
         AdvancedInstrument instrument = AdvancedInstrument.values()[instrumentOrdinal];
-        SubTickScheduler.delayedCoredNoteBlockEvent(sound.pos(), sustainIndex, noteVal, sound.volume(), instrument, noDecay, delay);
+        SubTickScheduler.delayedCoredNoteBlockEvent(sound.pos(), sustainIndex, noteVal, sound.volume(), instrument, noDecay, delay, heldByRedstone);
     }
 
     private static void handleTunerData(final TunerData data, final IPayloadContext context){
