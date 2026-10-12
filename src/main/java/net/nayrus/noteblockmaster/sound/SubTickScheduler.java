@@ -23,7 +23,7 @@ public class SubTickScheduler {
 
     public static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new SubtickThread());
     public static final HashMap<BlockPos, CoreSound> SUSTAINED_SOUNDS = new HashMap<>();
-    public static final HashMap<BlockPos, ScheduledFuture<?>> PENDING_CORE_SOUNDS = new HashMap<>();
+    public static final ConcurrentHashMap<BlockPos, ScheduledFuture<?>> PENDING_CORE_SOUNDS = new ConcurrentHashMap<>();
     public static final RandomSource RANDOM = RandomSource.create();
 
     public static void delayedNoteBlockEvent(BlockState state, Level level, BlockPos pos, AdvancedInstrument instrument, float volume){
