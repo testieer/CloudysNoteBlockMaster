@@ -3,7 +3,7 @@ package net.nayrus.noteblockmaster.sound;
 import com.mojang.blaze3d.audio.Channel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.resources.sounds.AbstractSoundInstance;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -14,7 +14,7 @@ import net.nayrus.noteblockmaster.render.particle.SustainedNoteOptions;
 
 import javax.annotation.Nullable;
 
-public class CoreSound extends AbstractSoundInstance {
+public class CoreSound extends SimpleSoundInstance {
 
     private final BlockPos immutablePos;
     private final int sustain;
@@ -24,20 +24,12 @@ public class CoreSound extends AbstractSoundInstance {
     private Particle particle;
 
     public CoreSound(SoundEvent soundEvent, SoundSource source, float volume, int noteVal, RandomSource random, BlockPos pos, int sustain, boolean mixing) {
-        super(soundEvent, source, random);
+        super(soundEvent, source, mixing ? volume : 3.0F, AdvancedNoteBlock.getPitchFromNote(noteVal), random, pos);
         this.immutablePos = pos.immutable();
         this.sustain = sustain;
         this.noteVal = noteVal;
         this.mixing = mixing;
-
-        this.volume = mixing ? volume : 3.0F;
-        this.pitch = AdvancedNoteBlock.getPitchFromNote(noteVal);
         this.looping = true;
-        this.delay = 0;
-        this.x = pos.getX() + 0.5D;
-        this.y = pos.getY() + 0.5D;
-        this.z = pos.getZ() + 0.5D;
-        this.attenuation = mixing ? Attenuation.NONE : Attenuation.LINEAR;
     }
 
     public void addNoteParticle(){
