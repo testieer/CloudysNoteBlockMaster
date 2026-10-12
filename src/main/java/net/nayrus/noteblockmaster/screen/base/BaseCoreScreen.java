@@ -10,7 +10,7 @@ import net.nayrus.noteblockmaster.screen.widget.IntegerEditBox;
 import net.nayrus.noteblockmaster.screen.widget.ValueSlider;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-public class BaseCoreScreen extends BaseScreen{
+public class BaseCoreScreen extends BaseScreen {
 
     protected IntegerEditBox volBox;
     protected IntegerEditBox sustainBox;
@@ -21,7 +21,7 @@ public class BaseCoreScreen extends BaseScreen{
     private final BlockPos pos;
 
     protected BaseCoreScreen(BlockState state, BlockPos pos) {
-        super(ResourceLocation.fromNamespaceAndPath(NoteBlockMaster.MOD_ID, "textures/gui/tunerscreen.png"), 176, 53);
+        super(ResourceLocation.fromNamespaceAndPath(NoteBlockMaster.MOD_ID, "textures/gui/tunerscreen.png"), 176, 31);
         if(TuningCore.isMixing(state)) this.volume = TuningCore.getVolume(state);
         if(TuningCore.isSustaining(state)) this.sustain = TuningCore.getSustain(state);
         this.pos = pos;
