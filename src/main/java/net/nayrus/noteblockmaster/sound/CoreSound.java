@@ -20,16 +20,18 @@ public class CoreSound extends SimpleSoundInstance {
     private final int sustain;
     private final int noteVal;
     private final boolean mixing;
+    private final boolean heldByRedstone;
     private Channel channel;
     private Particle particle;
 
-    public CoreSound(SoundEvent soundEvent, SoundSource source, float volume, int noteVal, RandomSource random, BlockPos pos, int sustain, boolean mixing) {
+    public CoreSound(SoundEvent soundEvent, SoundSource source, float volume, int noteVal, RandomSource random, BlockPos pos, int sustain, boolean mixing, boolean heldByRedstone) {
         super(soundEvent, source, mixing ? volume : 3.0F, AdvancedNoteBlock.getPitchFromNote(noteVal), random, pos);
         this.immutablePos = pos.immutable();
         this.sustain = sustain;
         this.noteVal = noteVal;
         this.mixing = mixing;
-        this.looping = true;
+        this.heldByRedstone = heldByRedstone;
+        this.looping = heldByRedstone;
     }
 
     public void addNoteParticle(){
