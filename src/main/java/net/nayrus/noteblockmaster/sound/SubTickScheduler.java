@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.NoteBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.nayrus.noteblockmaster.block.AdvancedNoteBlock;
 import net.nayrus.noteblockmaster.block.TuningCore;
@@ -52,7 +53,8 @@ public class SubTickScheduler {
                 (TuningCore.getVolume(core) / 20.0F),
                 instrument,
                 TuningCore.isMixing(core),
-                anb.getValue(AdvancedNoteBlock.SUBTICK)));
+                anb.getValue(AdvancedNoteBlock.SUBTICK),
+                anb.getValue(NoteBlock.POWERED)));
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -63,7 +65,8 @@ public class SubTickScheduler {
             float volume,
             AdvancedInstrument instrument,
             boolean noDecay,
-            int delay
+            int delay,
+            boolean heldByRedstone
     ){
         CoreSound instance = new CoreSound(
                 instrument.getSustainedEvent(sustainIndex),
@@ -74,7 +77,7 @@ public class SubTickScheduler {
                 pos,
                 instrument.getSustainTime(sustainIndex),
                 noDecay,
-                sustainIndex > 0
+                heldByRedstone && sustainIndex > 0
         );
 
         ScheduledFuture<?> future = executor.schedule(() -> Minecraft.getInstance().execute(() -> {
