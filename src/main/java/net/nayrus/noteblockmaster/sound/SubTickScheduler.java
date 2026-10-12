@@ -1,6 +1,5 @@
 package net.nayrus.noteblockmaster.sound;
 
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -24,6 +23,7 @@ public class SubTickScheduler {
 
     public static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new SubtickThread());
     public static final HashMap<BlockPos, CoreSound> SUSTAINED_SOUNDS = new HashMap<>();
+    public static final HashMap<BlockPos, ScheduledFuture<?>> PENDING_CORE_SOUNDS = new HashMap<>();
     public static final RandomSource RANDOM = RandomSource.create();
 
     public static void delayedNoteBlockEvent(BlockState state, Level level, BlockPos pos, AdvancedInstrument instrument, float volume){
@@ -50,7 +50,8 @@ public class SubTickScheduler {
                 TuningCore.getSustain(core),
                 AdvancedNoteBlock.getNoteValue(anb),
                 (TuningCore.getVolume(core) / 20.0F),
-                instrument, TuningCore.isMixing(core),
+                instrument,
+                TuningCore.isMixing(core),
                 anb.getValue(AdvancedNoteBlock.SUBTICK)));
     }
 
@@ -65,11 +66,23 @@ public class SubTickScheduler {
             int delay
     ){
         CoreSound instance = new CoreSound(
-                instrument.getSustainedEvent(sustainIndex), SoundSource.RECORDS, volume, noteVal,
-                RandomSource.create(RANDOM.nextLong()), pos, instrument.getSustainTime(sustainIndex), noDecay);
+                instrument.getSustainedEvent(sustainIndex),
+                SoundSource.RECORDS,
+                volume,
+                noteVal,
+                RandomSource.create(RANDOM.nextLong()),
+                pos,
+                instrument.getSustainTime(sustainIndex),
+                noDecay
+        );
 
-        executor.schedule(() -> Minecraft.getInstance().execute(() -> playSustainingSound(instance)),
-                (long) delay * AdvancedNoteBlock.SUBTICK_LENGTH, TimeUnit.MILLISECONDS);
+        ScheduledFuture<?> future = executor.schedule(() -> Minecraft.getInstance().execute(() -> {
+            PENDING_CORE_SOUNDS.remove(pos.immutable());
+            playSustainingSound(instance);
+        }), (long) delay * AdvancedNoteBlock.SUBTICK_LENGTH, TimeUnit.MILLISECONDS);
+
+        ScheduledFuture<?> previous = PENDING_CORE_SOUNDS.put(pos.immutable(), future);
+        if(previous != null) previous.cancel(false);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -79,10 +92,20 @@ public class SubTickScheduler {
     }
 
     @OnlyIn(Dist.CLIENT)
+    public static void stopCoreSound(BlockPos pos) {
+        BlockPos immutablePos = pos.immutable();
+        ScheduledFuture<?> pending = PENDING_CORE_SOUNDS.remove(immutablePos);
+        if(pending != null) pending.cancel(false);
+        playbackStop(immutablePos);
+    }
+
+    @OnlyIn(Dist.CLIENT)
     public static void playbackStop(BlockPos pos){
         SUSTAINED_SOUNDS.computeIfPresent(pos.immutable(), (p, sound) -> {
-            if(!sound.getChannel().stopped()) Minecraft.getInstance().getSoundManager().stop(sound);
-            if(sound.getParticle() != null && sound.getParticle().isAlive()) sound.getParticle().remove();
+            if(sound.getChannel() != null && !sound.getChannel().stopped())
+                Minecraft.getInstance().getSoundManager().stop(sound);
+            if(sound.getParticle() != null && sound.getParticle().isAlive())
+                sound.getParticle().remove();
             return null;
         });
     }
