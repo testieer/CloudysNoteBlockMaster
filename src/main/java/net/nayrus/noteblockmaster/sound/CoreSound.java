@@ -20,7 +20,6 @@ public class CoreSound extends SimpleSoundInstance {
     private final int sustain;
     private final int noteVal;
     private final boolean mixing;
-    private final boolean heldByRedstone;
     private Channel channel;
     private Particle particle;
 
@@ -30,7 +29,6 @@ public class CoreSound extends SimpleSoundInstance {
         this.sustain = sustain;
         this.noteVal = noteVal;
         this.mixing = mixing;
-        this.heldByRedstone = heldByRedstone;
         this.looping = heldByRedstone;
     }
 
