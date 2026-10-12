@@ -73,7 +73,8 @@ public class SubTickScheduler {
                 RandomSource.create(RANDOM.nextLong()),
                 pos,
                 instrument.getSustainTime(sustainIndex),
-                noDecay
+                noDecay,
+                sustainIndex > 0
         );
 
         ScheduledFuture<?> future = executor.schedule(() -> Minecraft.getInstance().execute(() -> {
