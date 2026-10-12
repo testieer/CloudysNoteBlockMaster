@@ -13,9 +13,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 public class BaseCoreScreen extends BaseScreen {
 
     protected IntegerEditBox volBox;
-    protected IntegerEditBox sustainBox;
     protected ValueSlider volSlider;
-    protected ValueSlider sustainSlider;
     protected int volume = -1;
     protected int sustain = -1;
     private final BlockPos pos;
