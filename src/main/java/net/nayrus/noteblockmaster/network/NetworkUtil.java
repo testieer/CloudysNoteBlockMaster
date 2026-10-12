@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.nayrus.noteblockmaster.network.payload.ScheduleCoreSound;
+import net.nayrus.noteblockmaster.network.payload.StopCoreSound;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
@@ -42,4 +43,16 @@ public class NetworkUtil {
         broadcastPayload(level.players(), null, pos.getX(), pos.getY(), pos.getZ(), 64, level.dimension(), payload);
     }
 
+    public static void broadcastCoreSoundStop(ServerLevel level, BlockPos pos){
+        broadcastPayload(
+                level.players(),
+                null,
+                pos.getX(),
+                pos.getY(),
+                pos.getZ(),
+                64,
+                level.dimension(),
+                new StopCoreSound(pos)
+        );
+    }
 }
