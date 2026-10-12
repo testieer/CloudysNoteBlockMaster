@@ -2,11 +2,11 @@
 Note Block Master
 =======
 
-This mod provides you with a wider range of notes and timing possibilities for your note block songs!
-Currently in Beta.
+Features:
+Overhauled the Sustaining Core so you don't need to use a slider.
 
-Upcoming features:
-- Block for song management. (Editing) Sharing, saving and loading of Note Block Studio songs
-- Sustaining Core may be replaced with Pitching Core as that is an actual feature of NBS
+How to use Sustaining Core
 
-
+1. Make the Sustaining Core and put it on the Noteblock
+2. Place a redstone signal near the Noteblock
+3. When sending the redstone signal, it will keep sustaining until you release the redstone signal.
