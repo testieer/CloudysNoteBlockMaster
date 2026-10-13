@@ -30,6 +30,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.nayrus.noteblockmaster.event.AdvancedNoteBlockEvent;
 import net.nayrus.noteblockmaster.item.TunerItem;
+import net.nayrus.noteblockmaster.network.NetworkUtil;
 import net.nayrus.noteblockmaster.network.data.TunerData;
 import net.nayrus.noteblockmaster.render.ANBInfoRender;
 import net.nayrus.noteblockmaster.setup.NBMTags;
@@ -155,6 +156,11 @@ public class AdvancedNoteBlock extends Block
         if (flag != state.getValue(NoteBlock.POWERED)) {
             if (flag) {
                 this.playNote(null, level, pos);
+            }
+            else if(level instanceof ServerLevel serverLevel) {
+                BlockState core = level.getBlockState(pos.above());
+                if(core.is(Registry.TUNINGCORE) && TuningCore.isSustaining(core))
+                    NetworkUtil.broadcastCoreSoundStop(serverLevel, pos);
             }
 
             level.setBlockAndUpdate(pos, state.setValue(NoteBlock.POWERED, flag));
