@@ -50,7 +50,7 @@ public class AdvancedNoteBlock extends Block
     public static int SUBTICK_LENGTH;
     public static final EnumProperty<AdvancedInstrument> INSTRUMENT = EnumProperty.create("advanced_instrument", AdvancedInstrument.class);
     public static final IntegerProperty SUBTICK = IntegerProperty.create("subtick",0, 19);
-    public static final IntegerProperty NOTE = IntegerProperty.create("note", 0, 82);
+    public static final IntegerProperty NOTE = IntegerProperty.create("note", 0, 87);
     public static int MIN_NOTE_VAL;
     public static int MAX_NOTE_VAL;
     public static int TOTAL_NOTES;
@@ -238,26 +238,47 @@ public class AdvancedNoteBlock extends Block
     public static int noteStringAsInt(String note, boolean validate){
         try{
             int num = Integer.parseInt(note);
-            if(validate && !Utils.isIntInRange(num, MIN_NOTE_VAL, MAX_NOTE_VAL)) throw new IllegalArgumentException("Note "+note+" is out of limited range "+MIN_NOTE_VAL+" ~ "+MAX_NOTE_VAL);
+            if(validate && !Utils.isIntInRange(num, MIN_NOTE_VAL, MAX_NOTE_VAL))
+                throw new IllegalArgumentException("Note " + note + " is out of limited range " + MIN_NOTE_VAL + " ~ " + MAX_NOTE_VAL);
+            if(num < 0 || num >= Utils.NOTE_STRING.length)
+                throw new IllegalArgumentException("Note " + note + " is out of 88-key piano range");
             return num;
         } catch (NumberFormatException e) {
-            note = note.toUpperCase();
-            if(note.length() > 3 || note.length() < 2) throw new IllegalArgumentException("Unexpected note format: Length not in range 2 ~ 3");
-            int val = note.length() == 3 ? 1 : 0;
-            char key = note.charAt(0);
-            switch(key){
-                case 'B': val += 2;
-                case 'A': val += 2;
-                case 'G': val += 2;
-                case 'F': val ++;
-                case 'E': val += 2;
-                case 'D': val += 2;
-                case 'C': break;
-                default: throw new IllegalArgumentException("Unknown key '"+key+"'");
+            String normalized = note.toUpperCase().replace('♯', '#').trim();
+            if(normalized.length() < 2 || normalized.length() > 3)
+                throw new IllegalArgumentException("Unexpected note format: " + note);
+
+            char key = normalized.charAt(0);
+            int semitone = switch (key) {
+                case 'C' -> 0;
+                case 'D' -> 2;
+                case 'E' -> 4;
+                case 'F' -> 5;
+                case 'G' -> 7;
+                case 'A' -> 9;
+                case 'B' -> 11;
+                default -> throw new IllegalArgumentException("Unknown key '" + key + "'");
+            };
+
+            int octaveIndex = normalized.length() - 1;
+            if(normalized.length() == 3){
+                if(normalized.charAt(1) != '#')
+                    throw new IllegalArgumentException("Unexpected note format: " + note);
+                semitone++;
             }
-            val += ((Character.getNumericValue(note.charAt(note.length()-1)) - 1) * 12);
-            if(val < 0 || val >= Utils.NOTE_STRING.length) throw new IllegalArgumentException("Note "+note+" is out of max range");
-            if(validate && !Utils.isIntInRange(val, MIN_NOTE_VAL, MAX_NOTE_VAL)) throw new IllegalArgumentException("Note "+note+" is out of limited range "+MIN_NOTE_VAL+" ~ "+MAX_NOTE_VAL);
+
+            char octaveChar = normalized.charAt(octaveIndex);
+            if(octaveChar < '0' || octaveChar > '8')
+                throw new IllegalArgumentException("Unexpected octave in note: " + note);
+            int octave = octaveChar - '0';
+
+            int midi = (octave + 1) * 12 + (semitone % 12);
+            int val = midi - 21; // A0 = MIDI 21 = index 0
+
+            if(val < 0 || val >= Utils.NOTE_STRING.length)
+                throw new IllegalArgumentException("Note " + note + " is out of 88-key piano range");
+            if(validate && !Utils.isIntInRange(val, MIN_NOTE_VAL, MAX_NOTE_VAL))
+                throw new IllegalArgumentException("Note " + note + " is out of limited range " + MIN_NOTE_VAL + " ~ " + MAX_NOTE_VAL);
             return val;
         }
     }
@@ -276,7 +297,7 @@ public class AdvancedNoteBlock extends Block
     }
 
     public static float getPitchFromNote(int note) {
-        return (float)Math.pow(2.0, (double)(note - 42) / 12.0);
+        return (float)Math.pow(2.0, (double)(note - 45) / 12.0);
     }
 
     public static Color getColor(int noteVal, int tickVal, Utils.PROPERTY info){
@@ -296,10 +317,9 @@ public class AdvancedNoteBlock extends Block
     }
 
     public int changeNoteValueBy(BlockState state, int value){
-        int note = getNoteValue(state);
-        int _new = (note + value);
-        if(_new >= note) return (_new <= MAX_NOTE_VAL) ? _new : ((_new % MAX_NOTE_VAL) - 1 + MIN_NOTE_VAL);
-        else return (_new >= MIN_NOTE_VAL) ? _new : (MAX_NOTE_VAL - (MIN_NOTE_VAL % _new) + 1);
+        int range = MAX_NOTE_VAL - MIN_NOTE_VAL + 1;
+        int current = getNoteValue(state) - MIN_NOTE_VAL;
+        return MIN_NOTE_VAL + Math.floorMod(current + value, range);
     }
 
     public InteractionResult onNoteChange(Level level, Player player, BlockState state, BlockPos pos, int new_val){
