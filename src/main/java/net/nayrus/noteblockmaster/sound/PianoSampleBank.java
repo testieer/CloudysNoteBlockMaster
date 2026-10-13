@@ -4,19 +4,17 @@ import net.minecraft.sounds.SoundEvent;
 
 public final class PianoSampleBank {
 
-    // Note Block Master's note numbering treats C1 as 0.
-    // Salamander samples are spaced in minor thirds, with A0/C8 included
-    // so the edge notes stay close to a real recorded key.
+    // 88-key piano indexing: A0 = 0, C8 = 87.
     private static final int[] ROOT_NOTES = {
-            -3,
-            0, 3, 6, 9,
-            12, 15, 18, 21,
-            24, 27, 30, 33,
-            36, 39, 42, 45,
-            48, 51, 54, 57,
-            60, 63, 66, 69,
-            72, 75, 78, 81,
-            84
+            0,
+            3, 6, 9, 12,
+            15, 18, 21, 24,
+            27, 30, 33, 36,
+            39, 42, 45, 48,
+            51, 54, 57, 60,
+            63, 66, 69, 72,
+            75, 78, 81, 84,
+            87
     };
 
     private PianoSampleBank() {}
