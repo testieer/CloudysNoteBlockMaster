@@ -29,7 +29,7 @@ public class CoreSound extends SimpleSoundInstance {
         this.sustain = sustain;
         this.noteVal = noteVal;
         this.mixing = mixing;
-        this.looping = heldByRedstone;
+        this.looping = false;
     }
 
     public void addNoteParticle(){
