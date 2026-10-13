@@ -24,6 +24,9 @@ public class SubTickScheduler {
 
     public static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new SubtickThread());
     public static final HashMap<BlockPos, CoreSound> SUSTAINED_SOUNDS = new HashMap<>();
+    public static final ConcurrentHashMap<BlockPos, ScheduledFuture<?>> PENDING_CORE_SOUNDS = new ConcurrentHashMap<>();
+    public static final int RELEASE_STEPS = 10;
+    public static final long RELEASE_STEP_MS = 25L;
     public static final RandomSource RANDOM = RandomSource.create();
 
     public static void delayedNoteBlockEvent(BlockState state, Level level, BlockPos pos, AdvancedInstrument instrument, float volume){
@@ -91,8 +94,15 @@ public class SubTickScheduler {
                     RandomSource.create(RANDOM.nextLong()), pos, instrument.getSustainTime(sustainIndex), noDecay);
         }
 
-        executor.schedule(() -> Minecraft.getInstance().execute(() -> playSustainingSound(instance)),
+        BlockPos immutablePos = pos.immutable();
+        ScheduledFuture<?> future = executor.schedule(() -> Minecraft.getInstance().execute(() -> {
+                    PENDING_CORE_SOUNDS.remove(immutablePos);
+                    playSustainingSound(instance);
+                }),
                 (long) delay * AdvancedNoteBlock.SUBTICK_LENGTH, TimeUnit.MILLISECONDS);
+
+        ScheduledFuture<?> previous = PENDING_CORE_SOUNDS.put(immutablePos, future);
+        if(previous != null) previous.cancel(false);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -102,9 +112,36 @@ public class SubTickScheduler {
     }
 
     @OnlyIn(Dist.CLIENT)
+    public static void stopCoreSound(BlockPos pos) {
+        BlockPos immutablePos = pos.immutable();
+        ScheduledFuture<?> pending = PENDING_CORE_SOUNDS.remove(immutablePos);
+        if(pending != null) pending.cancel(false);
+
+        CoreSound sound = SUSTAINED_SOUNDS.get(immutablePos);
+        if(sound == null) return;
+
+        float startVolume = sound.getVolume();
+        for(int step = 1; step <= RELEASE_STEPS; step++) {
+            final int releaseStep = step;
+            executor.schedule(() -> Minecraft.getInstance().execute(() -> {
+                CoreSound current = SUSTAINED_SOUNDS.get(immutablePos);
+                if(current != sound) return;
+
+                if(sound.getChannel() != null && !sound.getChannel().stopped()) {
+                    float factor = 1.0F - (releaseStep / (float) RELEASE_STEPS);
+                    sound.getChannel().setVolume(startVolume * factor);
+                }
+
+                if(releaseStep == RELEASE_STEPS) playbackStop(immutablePos);
+            }), step * RELEASE_STEP_MS, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
     public static void playbackStop(BlockPos pos){
         SUSTAINED_SOUNDS.computeIfPresent(pos.immutable(), (p, sound) -> {
-            if(!sound.getChannel().stopped()) Minecraft.getInstance().getSoundManager().stop(sound);
+            if(sound.getChannel() != null && !sound.getChannel().stopped())
+                Minecraft.getInstance().getSoundManager().stop(sound);
             if(sound.getParticle() != null && sound.getParticle().isAlive()) sound.getParticle().remove();
             return null;
         });
