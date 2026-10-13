@@ -42,6 +42,7 @@ public class PacketHandler {
         reg.playToClient(ConfigCheck.TYPE, ConfigCheck.STREAM_CODEC, PacketHandler::handleStartUpSync);
         reg.playToClient(ActionPing.TYPE, ActionPing.STREAM_CODEC, PacketHandler::handleActionPing);
         reg.playToClient(ScheduleCoreSound.TYPE, ScheduleCoreSound.STREAM_CODEC, PacketHandler::handleScheduleCoreSound);
+        reg.playToClient(StopCoreSound.TYPE, StopCoreSound.STREAM_CODEC, PacketHandler::handleStopCoreSound);
         reg.playToClient(SyncBlockInfos.TYPE, SyncBlockInfos.STREAM_CODEC, RenderUtils::handleSyncPacket);
         reg.playToClient(RemoveBlockInfo.TYPE, RemoveBlockInfo.STREAM_CODEC, RenderUtils::handleRemovePacket);
 
@@ -93,6 +94,10 @@ public class PacketHandler {
                 }
             }
         }
+    }
+
+    private static void handleStopCoreSound(final StopCoreSound sound, final IPayloadContext context){
+        context.enqueueWork(() -> SubTickScheduler.stopCoreSound(sound.pos()));
     }
 
     private static void handleScheduleCoreSound(final ScheduleCoreSound sound, final IPayloadContext context){
