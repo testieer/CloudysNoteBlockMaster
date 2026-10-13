@@ -25,7 +25,7 @@ public class SubTickScheduler {
     public static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new SubtickThread());
     public static final HashMap<BlockPos, CoreSound> SUSTAINED_SOUNDS = new HashMap<>();
     public static final ConcurrentHashMap<BlockPos, ScheduledFuture<?>> PENDING_CORE_SOUNDS = new ConcurrentHashMap<>();
-    public static final int RELEASE_STEPS = 10;
+    public static final int RELEASE_STEPS = 24;
     public static final long RELEASE_STEP_MS = 25L;
     public static final RandomSource RANDOM = RandomSource.create();
 
