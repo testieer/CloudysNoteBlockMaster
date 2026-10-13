@@ -25,6 +25,12 @@ public class NBMSoundProvider extends SoundDefinitionsProvider {
                 .subtitle("sounds.noteblockmaster.noteblock_upgrade")
         );
         addBasicLocalSounds(SoundRegistry.SUSTAINED_HARP_SOUND.getA(), "sustained_harp");
+        for(int i = 0; i < SoundRegistry.PIANO_SOUNDS.size(); i++) {
+            String sampleName = SoundRegistry.PIANO_SAMPLE_NAMES[i];
+            add(SoundRegistry.PIANO_SOUNDS.get(i), SoundDefinition.definition()
+                    .with(sound(ResourceLocation.fromNamespaceAndPath(NoteBlockMaster.MOD_ID, "piano/" + sampleName)))
+                    .subtitle("sounds.noteblockmaster.piano_" + sampleName));
+        }
         addBasicLocalSounds(SoundRegistry.SUSTAINED_BASS_SOUND.getA(), "sustained_bass");
         addBasicLocalSound(SoundRegistry.SUSTAINED_BASEDRUM_SOUND, "sustained_basedrum");
         addBasicLocalSound(SoundRegistry.SUSTAINED_BANJO_SOUND, "sustained_banjo");

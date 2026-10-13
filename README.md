@@ -1,1 +1,7 @@
-Original Mod (features added from Cloudy's Note Block Master are in the branches)
+
+Note Block Master
+=======
+
+Features:
+
+Changed the default Minecraft harp sound to actual realistic piano sounds

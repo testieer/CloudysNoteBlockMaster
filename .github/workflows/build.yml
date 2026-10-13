@@ -1,6 +1,6 @@
 name: Build
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
@@ -21,5 +21,44 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Install audio converter
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Fetch Salamander Grand Piano samples
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="src/main/resources/assets/noteblockmaster/sounds/piano"
+          mkdir -p "$out"
+
+          notes=(A0 C1 Ds1 Fs1 A1 C2 Ds2 Fs2 A2 C3 Ds3 Fs3 A3 C4 Ds4 Fs4 A4 C5 Ds5 Fs5 A5 C6 Ds6 Fs6 A6 C7 Ds7 Fs7 A7 C8)
+
+          for note in "${notes[@]}"; do
+            src="/tmp/${note}.mp3"
+            lower=$(echo "$note" | tr '[:upper:]' '[:lower:]')
+            curl -fL --retry 3 --retry-delay 2 "https://tonejs.github.io/audio/salamander/${note}.mp3" -o "$src"
+            ffmpeg -y -loglevel error -i "$src" -ar 44100 -c:a libvorbis -q:a 5 "$out/${lower}.ogg"
+          done
+
+      - name: Generate resources
+        run: ./gradlew runData
+
       - name: Build with Gradle
         run: ./gradlew build
+
+      - name: Verify piano samples are packaged
+        shell: bash
+        run: |
+          set -euo pipefail
+          jarfile=$(find build/libs -maxdepth 1 -name '*.jar' | head -n 1)
+          test -n "$jarfile"
+          jar tf "$jarfile" | grep -q 'assets/noteblockmaster/sounds/piano/a0.ogg'
+          jar tf "$jarfile" | grep -q 'assets/noteblockmaster/sounds/piano/c8.ogg'
+          jar tf "$jarfile" | grep -q 'assets/noteblockmaster/sounds.json'
+
+      - name: Upload mod JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudys-noteblockmaster-realistic-piano
+          path: build/libs/*.jar
+          if-no-files-found: error
