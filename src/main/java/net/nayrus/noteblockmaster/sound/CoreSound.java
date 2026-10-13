@@ -24,7 +24,11 @@ public class CoreSound extends SimpleSoundInstance{
     private Particle particle;
 
     public CoreSound(SoundEvent soundEvent, SoundSource source, float volume, int noteVal, RandomSource random, BlockPos pos, int sustain, boolean mixing) {
-        super(soundEvent, source, mixing ? volume : 3.0F, AdvancedNoteBlock.getPitchFromNote(noteVal) , random, pos);
+        this(soundEvent, source, volume, noteVal, random, pos, sustain, mixing, AdvancedNoteBlock.getPitchFromNote(noteVal));
+    }
+
+    public CoreSound(SoundEvent soundEvent, SoundSource source, float volume, int noteVal, RandomSource random, BlockPos pos, int sustain, boolean mixing, float pitch) {
+        super(soundEvent, source, mixing ? volume : 3.0F, pitch, random, pos);
         this.immutablePos = pos.immutable();
         this.sustain = sustain;
         this.noteVal = noteVal;
