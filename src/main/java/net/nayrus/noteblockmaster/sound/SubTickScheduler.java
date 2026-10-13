@@ -25,6 +25,8 @@ public class SubTickScheduler {
     public static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new SubtickThread());
     public static final HashMap<BlockPos, CoreSound> SUSTAINED_SOUNDS = new HashMap<>();
     public static final ConcurrentHashMap<BlockPos, ScheduledFuture<?>> PENDING_CORE_SOUNDS = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<BlockPos, ScheduledFuture<?>> PENDING_RELEASES = new ConcurrentHashMap<>();
+    public static final long RELEASE_TAIL_MS = 250L;
     public static final RandomSource RANDOM = RandomSource.create();
 
     public static void delayedNoteBlockEvent(BlockState state, Level level, BlockPos pos, AdvancedInstrument instrument, float volume){
@@ -91,7 +93,10 @@ public class SubTickScheduler {
 
     @OnlyIn(Dist.CLIENT)
     public static void playSustainingSound(CoreSound sound) {
-        playbackStop(sound.getImmutablePos());
+        BlockPos pos = sound.getImmutablePos();
+        ScheduledFuture<?> pendingRelease = PENDING_RELEASES.remove(pos);
+        if(pendingRelease != null) pendingRelease.cancel(false);
+        playbackStop(pos);
         Minecraft.getInstance().getSoundManager().play(sound);
     }
 
@@ -100,7 +105,17 @@ public class SubTickScheduler {
         BlockPos immutablePos = pos.immutable();
         ScheduledFuture<?> pending = PENDING_CORE_SOUNDS.remove(immutablePos);
         if(pending != null) pending.cancel(false);
-        playbackStop(immutablePos);
+
+        ScheduledFuture<?> previousRelease = PENDING_RELEASES.remove(immutablePos);
+        if(previousRelease != null) previousRelease.cancel(false);
+
+        if(!SUSTAINED_SOUNDS.containsKey(immutablePos)) return;
+
+        ScheduledFuture<?> release = executor.schedule(() -> Minecraft.getInstance().execute(() -> {
+            PENDING_RELEASES.remove(immutablePos);
+            playbackStop(immutablePos);
+        }), RELEASE_TAIL_MS, TimeUnit.MILLISECONDS);
+        PENDING_RELEASES.put(immutablePos, release);
     }
 
     @OnlyIn(Dist.CLIENT)
