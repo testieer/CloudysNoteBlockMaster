@@ -32,14 +32,27 @@ public class SubTickScheduler {
             level.addParticle(
                     ParticleTypes.NOTE, (double) pos.getX() + 0.5, (double) pos.getY() + 1.2, (double) pos.getZ() + 0.5, (i - 2f) / 29, 0.0, 0.0
             );
-            level.playSound(
-                    null,
-                    pos,
-                    instrument.getSoundEvent().value(),
-                    SoundSource.RECORDS,
-                    volume,
-                    AdvancedNoteBlock.getPitchFromNote(i)
-            );
+            if(instrument == AdvancedInstrument.HARP){
+                PianoSampleBank.Selection piano = PianoSampleBank.select(i);
+                level.playSound(
+                        null,
+                        pos,
+                        piano.sound(),
+                        SoundSource.RECORDS,
+                        volume,
+                        piano.pitch()
+                );
+            }
+            else {
+                level.playSound(
+                        null,
+                        pos,
+                        instrument.getSoundEvent().value(),
+                        SoundSource.RECORDS,
+                        volume,
+                        AdvancedNoteBlock.getPitchFromNote(i)
+                );
+            }
         }, (long) state.getValue(AdvancedNoteBlock.SUBTICK) * AdvancedNoteBlock.SUBTICK_LENGTH, TimeUnit.MILLISECONDS);
     }
 
@@ -64,9 +77,19 @@ public class SubTickScheduler {
             boolean noDecay,
             int delay
     ){
-        CoreSound instance = new CoreSound(
-                instrument.getSustainedEvent(sustainIndex), SoundSource.RECORDS, volume, noteVal,
-                RandomSource.create(RANDOM.nextLong()), pos, instrument.getSustainTime(sustainIndex), noDecay);
+        CoreSound instance;
+        if(instrument == AdvancedInstrument.HARP){
+            PianoSampleBank.Selection piano = PianoSampleBank.select(noteVal);
+            instance = new CoreSound(
+                    piano.sound(), SoundSource.RECORDS, volume, noteVal,
+                    RandomSource.create(RANDOM.nextLong()), pos,
+                    Math.max(instrument.getSustainTime(sustainIndex), 2500), noDecay, piano.pitch());
+        }
+        else {
+            instance = new CoreSound(
+                    instrument.getSustainedEvent(sustainIndex), SoundSource.RECORDS, volume, noteVal,
+                    RandomSource.create(RANDOM.nextLong()), pos, instrument.getSustainTime(sustainIndex), noDecay);
+        }
 
         executor.schedule(() -> Minecraft.getInstance().execute(() -> playSustainingSound(instance)),
                 (long) delay * AdvancedNoteBlock.SUBTICK_LENGTH, TimeUnit.MILLISECONDS);
